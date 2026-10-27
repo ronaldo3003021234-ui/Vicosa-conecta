@@ -1,47 +1,74 @@
 <?php
+
 namespace App\Controllers;
 
 use App\Models\ServicoModel;
-use CodeIgniter\Exceptions\PageNotFoundException;
 
 class ServicoController extends BaseController
 {
-    protected $helpers = ['url', 'form'];
-
-    public function listar(): string
+    public function index()
     {
         $model = new ServicoModel();
-        return view('servico/listar', [
-            'servicos' => $model->findAll()
-        ]);
+        $data['servicos'] = $model->findAll();
+
+        return view('servicos/listar', $data);
     }
 
-    public function editar($id): string
+    public function novo()
+    {
+        return view('servicos/form');
+    }
+
+    public function salvar()
     {
         $model = new ServicoModel();
-        $servico = $model->find($id);
 
-        if ($servico === null) {
-            throw PageNotFoundException::forPageNotFound('Serviço não encontrado.');
+        $file = $this->request->getFile('foto');
+        $nomeFoto = null;
+
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            $nomeFoto = $file->getRandomName();
+            $file->move(ROOTPATH . 'public/uploads', $nomeFoto);
         }
 
-        return view('servico/editar', [
-            'servico' => $servico,
-            'erros' => []
-        ]);
-    }
-
-    public function atualizar($id)
-    {
-        $model = new ServicoModel();
-        
-        $dadosPost = [
-            'Titulo' => $this->request->getPost('Titulo'),
-            'Texto' => $this->request->getPost('Texto'),
+        $data = [
+            'Titulo'    => $this->request->getPost('Titulo'),
+            'categoria' => $this->request->getPost('categoria'),
+            'Texto'     => $this->request->getPost('Texto'),
+            'status'    => $this->request->getPost('status'),
         ];
 
-        $model->update($id, $dadosPost);
+        if ($nomeFoto) {
+            $data['foto'] = $nomeFoto;
+        }
 
-        return redirect()->to(site_url('servicos'))->with('mensagem', 'Atualizado com sucesso!');
+        $id = $this->request->getPost('Id');
+
+        if ($id) {
+            if (!$nomeFoto) {
+                unset($data['foto']); // Mantém a foto anterior caso nenhuma nova seja enviada
+            }
+            $model->update($id, $data);
+        } else {
+            $model->save($data);
+        }
+
+        return redirect()->to(base_url('servicos'));
+    }
+
+    public function editar($id)
+    {
+        $model = new ServicoModel();
+        $data['servico'] = $model->find($id);
+
+        return view('servicos/form', $data);
+    }
+
+    public function excluir($id)
+    {
+        $model = new ServicoModel();
+        $model->delete($id);
+
+        return redirect()->to(base_url('servicos'));
     }
 }
