@@ -5,9 +5,12 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'Home::index');
 
-// Rotas do Viçosa Conecta (Serviços)
+// A raiz e a URL /home abrem a página de apresentação (Landing Page)
+$routes->get('/', 'Home::index');
+$routes->get('home', 'Home::index');
+
+// Rotas do Viçosa Conecta (Gerenciamento de Serviços e Tabela)
 $routes->get('servicos', 'ServicoController::index');
 $routes->get('servicos/novo', 'ServicoController::novo');
 $routes->post('servicos/salvar', 'ServicoController::salvar');
